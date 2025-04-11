@@ -166,7 +166,10 @@ namespace AS5048B {
          * @param value Value to write
          */
         private writeReg(reg: number, value: number): void {
-            pins.i2cWriteRegister(this.i2cAddr, reg, value);
+            let buffer = pins.createBuffer(2);
+            buffer.setUint8(0, reg);     // Adresse du registre
+            buffer.setUint8(1, value);   // Valeur à écrire
+            pins.i2cWriteBuffer(this.i2cAddr, buffer);
         }
 
         /**
