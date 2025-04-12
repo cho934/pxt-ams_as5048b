@@ -662,7 +662,7 @@ namespace MagEncoders {
         }
 
         /**
-         * Check if both encoder1 is connected
+         * Check if encoder1 is connected
          */
         //% blockId=as5048b_magencoder1_check block="%encoders|encodeur1 connecté ?"
         //% weight=66
@@ -671,7 +671,7 @@ namespace MagEncoders {
         }
 
         /**
-         * Check if both encoder2 is connected
+         * Check if encoder2 is connected
          */
         //% blockId=as5048b_magencoder2_check block="%encoders|encodeur2 connecté ?"
         //% weight=67
