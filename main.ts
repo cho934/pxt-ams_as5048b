@@ -127,10 +127,18 @@ namespace AS5048B {
         //% weight=80
         isConnected(): boolean {
             try {
+                let result = this.getAgc();
+                if ((result > 30) && (result < 130))
+                {
+                    return true; // If we get here, communication worked
+                }else
+                {
+                    return false;
+                }
                 // Read angle register to check connection
-                pins.i2cWriteNumber(this.i2cAddr, REG_ANGLMSB, NumberFormat.UInt8BE);
-                const result = pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt16BE);
-                return true; // If we get here, communication worked
+                //pins.i2cWriteNumber(this.i2cAddr, REG_ANGLMSB, NumberFormat.UInt8BE);
+                //const result = pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt16BE);
+                
             } catch (e) {
                 return false;
             }
