@@ -508,8 +508,8 @@ namespace MagEncoders {
         public encoderRSum: number;
         public encoderLSum: number;
 
-        public right: number;
-        public left: number;
+        public deltaEncoderRightFiltered: number;
+        public deltaEncoderLeftFiltered: number;
 
         /**
          * Constructor for magnetic encoders
@@ -536,6 +536,9 @@ namespace MagEncoders {
             this.encoder2Previous = 0;
             this.encoderRSum = 0;
             this.encoderLSum = 0;
+
+            this.deltaEncoderRightFiltered = 0; //right encoder delta values
+            this.deltaEncoderLeftFiltered = 0; //left encoder delta values
         }
 
         /**
@@ -569,9 +572,18 @@ namespace MagEncoders {
             let deltaEncoderRight = 0.0;
             let deltaEncoderLeft = 0.0;
 
-            // Get raw values
+            this.deltaEncoderRightFiltered=0;
+            this.deltaEncoderLeftFiltered=0;
+
+            //utilisation du depassement d'un int16
+            //[0;16383] -8192 * 4 = [-32768;32764]
             const encoder1 = (this.sensor1.getRawAngle() - 8192.0) * 4.0;
             const encoder2 = (this.sensor2.getRawAngle() - 8192.0) * 4.0;
+            serial.writeLine("getRawAngle:");
+            serial.writeNumber(this.sensor1.getRawAngle());
+            serial.writeLine("encoder1=")
+            serial.writeNumber(encoder1);
+            serial.writeLine("");
 
             // Determine deltas based on configuration
             if (this.is1EncoderRight) {
@@ -582,6 +594,10 @@ namespace MagEncoders {
                 deltaEncoderLeft = encoder1 - this.encoder1Previous;
             }
 
+            serial.writeLine("deltaEncoderRight=")
+            serial.writeNumber(deltaEncoderRight);
+            serial.writeLine("");
+            
             // Invert if necessary
             if (this.invertEncoderR)
                 deltaEncoderRight = -deltaEncoderRight;
@@ -601,8 +617,8 @@ namespace MagEncoders {
             this.encoder2Previous = encoder2;
 
             
-            this.right=deltaEncoderRight;
-            this.left=deltaEncoderLeft;
+            this.deltaEncoderRightFiltered=deltaEncoderRight;
+            this.deltaEncoderLeftFiltered=deltaEncoderLeft;
             
         }
 
@@ -612,7 +628,7 @@ namespace MagEncoders {
         //% blockId=as5048b_magencoders_get_right block="%encoders|valeur encodeur droit"
         //% weight=85
         public getRightValue(): number {
-            return this.right;
+            return this.deltaEncoderRightFiltered;
         }
 
         /**
@@ -621,7 +637,7 @@ namespace MagEncoders {
         //% blockId=as5048b_magencoders_get_left block="%encoders|valeur encodeur gauche"
         //% weight=84
         public getLeftValue(): number {
-            return this.left;
+            return this.deltaEncoderLeftFiltered;
         }
 
         /**
