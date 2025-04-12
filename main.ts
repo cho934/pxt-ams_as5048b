@@ -593,7 +593,7 @@ namespace MagEncoders {
                 deltaEncoderRight = encoder2 - this.encoder2Previous;
                 deltaEncoderLeft = encoder1 - this.encoder1Previous;
             }
-            serial.writeValue("deltaEncoderRight", deltaEncoderRight);
+            serial.writeValue("deltaEncoderRight", (deltaEncoderRight & 0xFFFF));
             
             
             // Invert if necessary
