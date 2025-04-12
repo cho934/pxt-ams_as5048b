@@ -665,7 +665,7 @@ namespace MagEncoders {
          * Check if both encoder1 is connected
          */
         //% blockId=as5048b_magencoder1_check block="%encoders|encodeur1 connecté ?"
-        //% weight=65
+        //% weight=66
         public isEncoder1Connected(): boolean {
             return this.sensor1.isConnected();
         }
@@ -674,7 +674,7 @@ namespace MagEncoders {
          * Check if both encoder2 is connected
          */
         //% blockId=as5048b_magencoder2_check block="%encoders|encodeur2 connecté ?"
-        //% weight=65
+        //% weight=67
         public isEncoder2Connected(): boolean {
             return this.sensor2.isConnected();
         }
