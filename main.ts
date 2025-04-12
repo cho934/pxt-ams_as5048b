@@ -457,6 +457,13 @@ namespace AS5048B {
 }
 
 
+
+
+
+
+
+
+
 //% color=#000000 icon="\uf085" block="MAGENCODERS"
 namespace MagEncoders {
 
@@ -652,6 +659,24 @@ namespace MagEncoders {
         //% weight=65
         public areEncodersConnected(): boolean {
             return this.sensor1.isConnected() && this.sensor2.isConnected();
+        }
+
+        /**
+         * Check if both encoder1 is connected
+         */
+        //% blockId=as5048b_magencoder1_check block="%encoders|encodeur1 connecté ?"
+        //% weight=65
+        public isEncoder1Connected(): boolean {
+            return this.sensor1.isConnected();
+        }
+
+        /**
+         * Check if both encoder2 is connected
+         */
+        //% blockId=as5048b_magencoder2_check block="%encoders|encodeur2 connecté ?"
+        //% weight=65
+        public isEncoder2Connected(): boolean {
+            return this.sensor2.isConnected();
         }
     }
 }
