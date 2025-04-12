@@ -97,8 +97,6 @@ namespace AS5048B {
             this.movingAvgCount = 0;
         }
 
-        // Rest of the class implementation remains unchanged
-
         /**
          * Set the I2C address for this sensor
          * @param address New I2C address
@@ -450,4 +448,213 @@ namespace AS5048B {
         RADIANS: U_RAD,
         GRADIANS: U_GRAD
     };
+
+}
+
+
+//% color=#000000 icon="\uf085" block="MAGENCODERS"
+namespace MagEncoders {
+
+    /**
+     * Creates a new MagEncoder instance for dual AS5048B encoders
+     * @param is1EncoderRight If the first encoder is connected to the right wheel
+     * @param invertEncoderRight Invert right encoder direction
+     * @param invertEncoderLeft Invert left encoder direction
+     */
+    //% blockId=as5048b_create_magencoders block="créer encodeurs avec 1=droite %is1EncoderRight|inverser droite %invertRight|inverser gauche %invertLeft"
+    //% is1EncoderRight.defl=true
+    //% invertRight.defl=false
+    //% invertLeft.defl=false
+    //% weight=98
+    export function createMagEncoder(
+        is1EncoderRight: boolean = true,
+        invertRight: boolean = false,
+        invertLeft: boolean = false
+    ): MagEncoders {
+        return new MagEncoders(is1EncoderRight, invertRight, invertLeft);
+    }
+
+
+    /**
+     * Class for managing dual magnetic rotary encoders (AS5048B)
+     * Used for differential drive robots with left and right encoders
+     */
+    //% color=#000000
+    //% blockId=as5048b_magencoders_class
+    //% block="encodeurs magnétiques"
+    export class MagEncoders {
+        private sensor1: AS5048B.AS5048BSensor;
+        private sensor2: AS5048B.AS5048BSensor;
+        private is1EncoderRight: boolean;
+        private invertEncoderR: boolean;
+        private invertEncoderL: boolean;
+
+        private encoder1Previous: number;
+        private encoder2Previous: number;
+        private encoderRSum: number;
+        private encoderLSum: number;
+
+        /**
+         * Constructor for magnetic encoders
+         * @param is1EncoderRight If the first encoder is on the right wheel
+         * @param invertEncoderRight Invert right encoder direction
+         * @param invertEncoderLeft Invert left encoder direction
+         */
+        constructor(
+            is1EncoderRight: boolean = true,
+            invertEncoderRight: boolean = false,
+            invertEncoderLeft: boolean = false
+        ) {
+            // Configure AS5048B sensors with proper addresses
+            // First sensor (A1=1, A2=1) => Address 0x40
+            // Second sensor (A1=0, A2=1) => Address 0x42
+            this.sensor1 = AS5048B.createSensorWithPins(1, 1);
+            this.sensor2 = AS5048B.createSensorWithPins(0, 1);
+
+            this.is1EncoderRight = is1EncoderRight;
+            this.invertEncoderR = invertEncoderRight;
+            this.invertEncoderL = invertEncoderLeft;
+
+            this.encoder1Previous = 0;
+            this.encoder2Previous = 0;
+            this.encoderRSum = 0;
+            this.encoderLSum = 0;
+        }
+
+        /**
+         * Start encoders and initialize counters
+         */
+        //% blockId=as5048b_magencoders_start block="%encoders|démarrer"
+        //% weight=100
+        public start(): void {
+            this.encoder1Previous = ((this.sensor1.getRawAngle() - 8192.0) * 4.0);
+            this.encoder2Previous = ((this.sensor2.getRawAngle() - 8192.0) * 4.0);
+            this.encoderRSum = 0;
+            this.encoderLSum = 0;
+        }
+
+        /**
+         * Reset encoders and counters
+         */
+        //% blockId=as5048b_magencoders_stop block="%encoders|réinitialiser"
+        //% weight=95
+        public stop(): void {
+            this.start(); // Reset values
+        }
+
+        /**
+         * Get encoder values (delta movement since last reading)
+         * @returns Object with right and left encoder delta values
+         */
+        //% blockId=as5048b_magencoders_get_values block="%encoders|lire valeurs"
+        //% weight=90
+        public getValues(): { right: number, left: number } {
+            let deltaEncoderRight = 0.0;
+            let deltaEncoderLeft = 0.0;
+
+            // Get raw values
+            const encoder1 = (this.sensor1.getRawAngle() - 8192.0) * 4.0;
+            const encoder2 = (this.sensor2.getRawAngle() - 8192.0) * 4.0;
+
+            // Determine deltas based on configuration
+            if (this.is1EncoderRight) {
+                deltaEncoderRight = encoder1 - this.encoder1Previous;
+                deltaEncoderLeft = encoder2 - this.encoder2Previous;
+            } else {
+                deltaEncoderRight = encoder2 - this.encoder2Previous;
+                deltaEncoderLeft = encoder1 - this.encoder1Previous;
+            }
+
+            // Invert if necessary
+            if (this.invertEncoderR)
+                deltaEncoderRight = -deltaEncoderRight;
+            if (this.invertEncoderL)
+                deltaEncoderLeft = -deltaEncoderLeft;
+
+            // Convert to normalized values
+            deltaEncoderRight = (Math.floor(deltaEncoderRight) & 0xFFFF) / 4.0;
+            deltaEncoderLeft = (Math.floor(deltaEncoderLeft) & 0xFFFF) / 4.0;
+
+            // Update sums
+            this.encoderRSum += Math.floor(deltaEncoderRight);
+            this.encoderLSum += Math.floor(deltaEncoderLeft);
+
+            // Save previous values
+            this.encoder1Previous = encoder1;
+            this.encoder2Previous = encoder2;
+
+            return {
+                right: deltaEncoderRight,
+                left: deltaEncoderLeft
+            };
+        }
+
+        /**
+         * Get right encoder value
+         */
+        //% blockId=as5048b_magencoders_get_right block="%encoders|valeur encodeur droit"
+        //% weight=85
+        public getRightValue(): number {
+            return this.getValues().right;
+        }
+
+        /**
+         * Get left encoder value
+         */
+        //% blockId=as5048b_magencoders_get_left block="%encoders|valeur encodeur gauche"
+        //% weight=84
+        public getLeftValue(): number {
+            return this.getValues().left;
+        }
+
+        /**
+         * Get total encoder counts
+         * @returns Object with total right and left encoder counts
+         */
+        //% blockId=as5048b_magencoders_get_total block="%encoders|compteurs totaux"
+        //% weight=80
+        public getEncodersTotalCount(): { right: number, left: number } {
+            return {
+                right: this.encoderRSum,
+                left: this.encoderLSum
+            };
+        }
+
+        /**
+         * Get total right encoder count
+         */
+        //% blockId=as5048b_magencoders_get_total_right block="%encoders|compteur total droit"
+        //% weight=75
+        public getRightTotalCount(): number {
+            return this.encoderRSum;
+        }
+
+        /**
+         * Get total left encoder count
+         */
+        //% blockId=as5048b_magencoders_get_total_left block="%encoders|compteur total gauche"
+        //% weight=74
+        public getLeftTotalCount(): number {
+            return this.encoderLSum;
+        }
+
+        /**
+         * Reset total encoder counts
+         */
+        //% blockId=as5048b_magencoders_reset_total block="%encoders|réinitialiser compteurs"
+        //% weight=70
+        public resetTotalCount(): void {
+            this.encoderRSum = 0;
+            this.encoderLSum = 0;
+        }
+
+        /**
+         * Check if both encoders are connected
+         */
+        //% blockId=as5048b_magencoders_check block="%encoders|encodeurs connectés ?"
+        //% weight=65
+        public areEncodersConnected(): boolean {
+            return this.sensor1.isConnected() && this.sensor2.isConnected();
+        }
+    }
 }
