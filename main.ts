@@ -562,6 +562,11 @@ namespace MagEncoders {
             this.start(); // Reset values
         }
 
+
+        private toInt16(value: number): number {
+            return (((value | 0) << 16) >> 16);
+        }
+
         /**
          * Get encoder values (delta movement since last reading)
          * @returns Object with right and left encoder delta values
@@ -593,7 +598,7 @@ namespace MagEncoders {
                 deltaEncoderRight = encoder2 - this.encoder2Previous;
                 deltaEncoderLeft = encoder1 - this.encoder1Previous;
             }
-            serial.writeValue("deltaEncoderRight", (deltaEncoderRight & 0xFFFF));
+            serial.writeValue("deltaEncoderRight", this.toInt16(deltaEncoderRight));
             
             
             // Invert if necessary
@@ -603,8 +608,8 @@ namespace MagEncoders {
                 deltaEncoderLeft = -deltaEncoderLeft;
 
             // Convert to normalized values
-            deltaEncoderRight = (Math.floor(deltaEncoderRight) & 0xFFFF) / 4.0;
-            deltaEncoderLeft = (Math.floor(deltaEncoderLeft) & 0xFFFF) / 4.0;
+            deltaEncoderRight = this.toInt16(Math.floor(deltaEncoderRight)) / 4.0;
+            deltaEncoderLeft = this.toInt16(Math.floor(deltaEncoderLeft)) / 4.0;
 
             // Update sums
             this.encoderRSum += Math.floor(deltaEncoderRight);
