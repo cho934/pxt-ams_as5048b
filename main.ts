@@ -598,7 +598,7 @@ namespace MagEncoders {
                 deltaEncoderRight = encoder2 - this.encoder2Previous;
                 deltaEncoderLeft = encoder1 - this.encoder1Previous;
             }
-            serial.writeValue("deltaEncoderRight", this.toInt16(deltaEncoderRight));
+            serial.writeValue("deltaEncoderRight", deltaEncoderRight);
             
             
             // Invert if necessary
@@ -610,6 +610,9 @@ namespace MagEncoders {
             // Convert to normalized values
             deltaEncoderRight = this.toInt16(Math.floor(deltaEncoderRight)) / 4.0;
             deltaEncoderLeft = this.toInt16(Math.floor(deltaEncoderLeft)) / 4.0;
+
+
+            serial.writeValue("deltaEncoderRight final", deltaEncoderRight);
 
             // Update sums
             this.encoderRSum += Math.floor(deltaEncoderRight);
