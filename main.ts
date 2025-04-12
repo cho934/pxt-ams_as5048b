@@ -9,8 +9,9 @@ namespace AS5048B {
     const REG_ADDR = 0x15;          // Address register
     const REG_ZEROMSB = 0x16;       // Zero position MSB register
     const REG_ZEROLSB = 0x17;       // Zero position LSB register
-    const REG_AGC = 0xFA;           // Automatic Gain Control register
-    const REG_DIAG = 0xFB;          // Diagnostics register
+//Inversion REG_DIAG / REG_AGC ???
+    const REG_DIAG = 0xFA;          // Diagnostics register
+    const REG_AGC = 0xFB;           // Automatic Gain Control register
     const REG_MAGNMSB = 0xFC;       // Magnitude MSB register
     const REG_MAGNLSB = 0xFD;       // Magnitude LSB register
     const REG_ANGLMSB = 0xFE;       // Angle MSB register
@@ -273,7 +274,7 @@ namespace AS5048B {
         }
 
         /**
-         * Get the Automatic Gain Control value
+         * Get the Automatic Gain Control value (distance of the magnet)
          * @returns AGC value (0-255)
          */
         //% blockId=as5048b_get_agc block="%sensor|valeur AGC"
