@@ -455,6 +455,7 @@ namespace AS5048B {
 //% color=#000000 icon="\uf085" block="MAGENCODERS"
 namespace MagEncoders {
 
+
     /**
      * Creates a new MagEncoder instance for dual AS5048B encoders
      * @param is1EncoderRight If the first encoder is connected to the right wheel
@@ -491,8 +492,12 @@ namespace MagEncoders {
 
         private encoder1Previous: number;
         private encoder2Previous: number;
-        private encoderRSum: number;
-        private encoderLSum: number;
+        
+        public encoderRSum: number;
+        public encoderLSum: number;
+
+        public right: number;
+        public left: number;
 
         /**
          * Constructor for magnetic encoders
@@ -548,7 +553,7 @@ namespace MagEncoders {
          */
         //% blockId=as5048b_magencoders_get_values block="%encoders|lire valeurs"
         //% weight=90
-        public getValues(): { right: number, left: number } {
+        public getValues(): void {
             let deltaEncoderRight = 0.0;
             let deltaEncoderLeft = 0.0;
 
@@ -583,10 +588,10 @@ namespace MagEncoders {
             this.encoder1Previous = encoder1;
             this.encoder2Previous = encoder2;
 
-            return {
-                right: deltaEncoderRight,
-                left: deltaEncoderLeft
-            };
+            
+            this.right=deltaEncoderRight;
+            this.left=deltaEncoderLeft;
+            
         }
 
         /**
@@ -595,7 +600,7 @@ namespace MagEncoders {
         //% blockId=as5048b_magencoders_get_right block="%encoders|valeur encodeur droit"
         //% weight=85
         public getRightValue(): number {
-            return this.getValues().right;
+            return this.right;
         }
 
         /**
@@ -604,20 +609,7 @@ namespace MagEncoders {
         //% blockId=as5048b_magencoders_get_left block="%encoders|valeur encodeur gauche"
         //% weight=84
         public getLeftValue(): number {
-            return this.getValues().left;
-        }
-
-        /**
-         * Get total encoder counts
-         * @returns Object with total right and left encoder counts
-         */
-        //% blockId=as5048b_magencoders_get_total block="%encoders|compteurs totaux"
-        //% weight=80
-        public getEncodersTotalCount(): { right: number, left: number } {
-            return {
-                right: this.encoderRSum,
-                left: this.encoderLSum
-            };
+            return this.left;
         }
 
         /**
