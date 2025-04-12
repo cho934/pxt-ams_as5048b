@@ -16,8 +16,7 @@ namespace AS5048B {
     const REG_ANGLMSB = 0xFE;       // Angle MSB register
     const REG_ANGLLSB = 0xFF;       // Angle LSB register
 
-    // Masks and constants
-    const ANGLE_MASK = 0x3F;      // 14-bit mask for angle value
+    // Constants
     const RESOLUTION = 16384;       // 2^14, maximum value for angle
 
     // Angle unit constants
@@ -153,17 +152,8 @@ namespace AS5048B {
          * Read register value (16-bit)
          * @param reg Register address
          * @returns 14-bit register value (masked appropriately)
-         */
-        /*private readReg16(reg: number): number {
-            pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8BE);
-            const value = pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt16BE);
-            return value & ANGLE_MASK; // Mask to 14 bits
-        }*/
-
-        /**
-    * Lit une valeur de 16 bits à partir de deux registres 8 bits
-    * (7..0 MSB + 5..0 LSB) => valeur de 14 bits
-    */
+        * (7..0 MSB + 5..0 LSB) => valeur de 14 bits
+        */
         private readReg16(reg: number): number {
             // Nombre d'octets à lire
             const nbByte2Read = 2;
@@ -195,7 +185,7 @@ namespace AS5048B {
                 return readValue;
             } catch (e) {
                 // Gestion d'erreur I2C simplifiée
-                serial.writeLine("I2C error");
+                serial.writeLine("readReg16 I2C error");
                 return 0;
             }
         }
@@ -223,7 +213,8 @@ namespace AS5048B {
 
             // Handle clockwise rotation if needed
             if (this.clockWise) {
-                rawValue = ANGLE_MASK - rawValue;
+                // 0b11111111111111 correspond à 16383 en décimal (0x3FFF) (14 bits à 1)
+                rawValue = 0b11111111111111 - rawValue;
             }
 
             this.lastAngleRaw = rawValue;
