@@ -17,7 +17,7 @@ namespace AS5048B {
     const REG_ANGLLSB = 0xFF;       // Angle LSB register
 
     // Masks and constants
-    const ANGLE_MASK = 0x3FFF;      // 14-bit mask for angle value
+    const ANGLE_MASK = 0x3F;      // 14-bit mask for angle value
     const RESOLUTION = 16384;       // 2^14, maximum value for angle
 
     // Angle unit constants
@@ -154,10 +154,50 @@ namespace AS5048B {
          * @param reg Register address
          * @returns 14-bit register value (masked appropriately)
          */
-        private readReg16(reg: number): number {
+        /*private readReg16(reg: number): number {
             pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8BE);
             const value = pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt16BE);
             return value & ANGLE_MASK; // Mask to 14 bits
+        }*/
+
+        /**
+    * Lit une valeur de 16 bits à partir de deux registres 8 bits
+    * (7..0 MSB + 5..0 LSB) => valeur de 14 bits
+    */
+        private readReg16(reg: number): number {
+            // Nombre d'octets à lire
+            const nbByte2Read = 2;
+            let requestResult: number;
+            let readArray: number[] = [0, 0];
+            let readValue = 0;
+
+            // Démarrer la transmission I2C
+            pins.i2cWriteNumber(
+                this.i2cAddr,
+                reg,
+                NumberFormat.UInt8LE,
+                true  // répéter (équivalent à endTransmission(false))
+            );
+
+            // Vérification d'erreur I2C (simplifiée pour micro:bit)
+            try {
+                // Lire les données
+                let readBuffer = pins.i2cReadBuffer(this.i2cAddr, nbByte2Read);
+
+                // Convertir le buffer en tableau
+                readArray[0] = readBuffer[0];
+                readArray[1] = readBuffer[1];
+
+                // Combiner les deux octets pour obtenir la valeur de 14 bits
+                readValue = (readArray[0] << 6);
+                readValue += (readArray[1] & 0x3F);
+
+                return readValue;
+            } catch (e) {
+                // Gestion d'erreur I2C simplifiée
+                serial.writeLine("I2C error");
+                return 0;
+            }
         }
 
         /**
