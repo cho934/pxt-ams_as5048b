@@ -659,18 +659,18 @@ namespace MagEncoders {
         /**
          * Get right encoder value
          */
-        //% blockId=as5048b_magencoders_get_right block="%encoders|valeur encodeur droit"
+        //% blockId=as5048b_magencoders_get_right block="%encoders|valeur delta encodeur droit"
         //% weight=85
-        public getRightValue(): number {
+        public getDeltaRightValue(): number {
             return this.deltaEncoderRightFiltered;
         }
 
         /**
          * Get left encoder value
          */
-        //% blockId=as5048b_magencoders_get_left block="%encoders|valeur encodeur gauche"
+        //% blockId=as5048b_magencoders_get_left block="%encoders|valeur delta encodeur gauche"
         //% weight=84
-        public getLeftValue(): number {
+        public getDeltaLeftValue(): number {
             return this.deltaEncoderLeftFiltered;
         }
 
@@ -741,7 +741,7 @@ namespace MagEncoders {
 /* 
 __Howto__
 // Initialisation avec vos paramètres
-odometry.initialize(1000, 2000);
+odometry.initialize(150, 2000); // 150mm entre les roues, 2000 ticks par mètre
 
 // Dans votre boucle principale ou gestionnaire d'événements
 basic.forever(function() {
@@ -760,13 +760,13 @@ basic.forever(function() {
 // Calculates position and orientation using wheel encoder data
 namespace odometry {
     // Global variables for position tracking
-    export let X = 0;           // X position in meters
-    export let Y = 0;           // Y position in meters  
+    export let X = 0;           // X position in mm
+    export let Y = 0;           // Y position in mm  
     export let alphaRad = 0;       // Orientation angle in radians
 
     // Constants - adjust these based on your robot's specifications
-    export let entraxeEnTick = 1000;  // Distance between wheels in encoder ticks
-    export let tickParMetre = 2000;   // Number of ticks per meter
+    export let entraxe_tick = 1000;  // Distance between wheels in encoder ticks
+    export let ticksPerMeter = 2000;   // Number of ticks per meter
 
     // Variables to store encoder deltas
     let dRight = 0;
@@ -774,13 +774,14 @@ namespace odometry {
 
     /**
      * Initialize the odometry module with specific parameters
-     * @param wheelbase Distance between wheels in encoder ticks
+     * @param wheelbase Distance between wheels in mm
      * @param ticksPerMeter Number of encoder ticks per meter
      */
-    //% block="initialize odometry with wheelbase %wheelbase|ticks and %ticksPerMeter|ticks per meter"
-    export function initialize(wheelbase: number, ticksPerMeter: number) {
-        entraxeEnTick = wheelbase;
-        tickParMetre = ticksPerMeter;
+    //% block="initialize odometry with wheelbase %wheelbase|mm and %ticksPerMeter|ticks per meter"
+    export function initialize(entraxe_mm: number, nbticksPerMeter: number) {
+        // Convert wheelbase from mm to ticks
+        entraxe_tick = entraxe_mm * nbticksPerMeter / 1000;
+        odometry.ticksPerMeter = nbticksPerMeter;
         X = 0;
         Y = 0;
         alphaRad = 0;
@@ -798,8 +799,8 @@ namespace odometry {
 
     /**
      * Set position and orientation to specific values
-     * @param x X position in meters
-     * @param y Y position in meters
+     * @param x X position in mm
+     * @param y Y position in mm
      * @param angle Orientation in radians
      */
     //% block="set position to x: %x|y: %y|angle: %angle"
@@ -815,7 +816,7 @@ namespace odometry {
      * @param leftDelta Left encoder delta in ticks
      */
     //% block="update with right delta: %rightDelta|left delta: %leftDelta"
-    export function update(rightDelta: number, leftDelta: number) {
+    export function update(leftDelta: number, rightDelta: number) {
         dRight = rightDelta;
         dLeft = leftDelta;
 
@@ -824,7 +825,7 @@ namespace odometry {
         let dDelta = (dRight + dLeft) / 2;         // Variation of the forward movement
 
         // Convert to radians and update angle
-        alphaRad += dAlpha / entraxeEnTick;
+        alphaRad += dAlpha / entraxe_tick;
 
         // Keep alpha within [-π, π] range
         while (alphaRad > Math.PI) {
@@ -838,23 +839,23 @@ namespace odometry {
         let dX = Math.cos(alphaRad) * dDelta;
         let dY = Math.sin(alphaRad) * dDelta;
 
-        // Update position in meters
-        X += dX / tickParMetre;
-        Y += dY / tickParMetre;
+        // Update position in mm
+        X += dX * 1000 / ticksPerMeter;  // Convert from ticks to mm
+        Y += dY * 1000 / ticksPerMeter;  // Convert from ticks to mm
     }
 
     /**
-     * Get current X position in meters
+     * Get current X position in mm
      */
-    //% block="get X position (meters)"
+    //% block="get X position (mm)"
     export function getX(): number {
         return X;
     }
 
     /**
-     * Get current Y position in meters
+     * Get current Y position in mm
      */
-    //% block="get Y position (meters)"
+    //% block="get Y position (mm)"
     export function getY(): number {
         return Y;
     }
