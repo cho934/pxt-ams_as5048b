@@ -765,7 +765,7 @@ namespace odometry {
     export let alphaRad = 0;       // Orientation angle in radians
 
     // Constants - adjust these based on your robot's specifications
-    export let entraxe_tick = 1000;  // Distance between wheels in encoder ticks
+    export let entraxeInMM = 100;  // Distance between wheels in mm
     export let ticksPerMeter = 2000;   // Number of ticks per meter
 
     // Variables to store encoder deltas
@@ -780,7 +780,7 @@ namespace odometry {
     //% block="initialize odometry with wheelbase %wheelbase|mm and %ticksPerMeter|ticks per meter"
     export function initialize(entraxe_mm: number, nbticksPerMeter: number) {
         // Convert wheelbase from mm to ticks
-        entraxe_tick = entraxe_mm * nbticksPerMeter / 1000;
+        odometry.entraxeInMM = entraxe_mm ;//* nbticksPerMeter / 1000;
         odometry.ticksPerMeter = nbticksPerMeter;
         X = 0;
         Y = 0;
@@ -815,6 +815,7 @@ namespace odometry {
      * @param rightDelta Right encoder delta in ticks
      * @param leftDelta Left encoder delta in ticks
      */
+    /*
     //% block="update with right delta: %rightDelta|left delta: %leftDelta"
     export function update(leftDelta: number, rightDelta: number) {
         dRight = rightDelta;
@@ -842,6 +843,59 @@ namespace odometry {
         // Update position in mm
         X += dX * 1000 / ticksPerMeter;  // Convert from ticks to mm
         Y += dY * 1000 / ticksPerMeter;  // Convert from ticks to mm
+    }*/
+
+    /**
+     * Update odometry with new encoder values in mm
+     * @param rightDeltaMm Right encoder delta in mm
+     * @param leftDeltaMm Left encoder delta in mm
+     */
+    //% block="update with right delta: %rightDeltaMm|mm left delta: %leftDeltaMm|mm"
+    export function update(rightDeltaMm: number, leftDeltaMm: number) {
+        // Calculate distance traveled and angle variation
+        let deltaDist = (leftDeltaMm + rightDeltaMm) / 2;
+        let diffCount = rightDeltaMm - leftDeltaMm;
+        let deltaTheta = diffCount / entraxeInMM; // In radians
+
+        if (diffCount == 0) {
+            // Consider movement as a straight line
+            // Update position
+            X += deltaDist * Math.cos(alphaRad);
+            Y += deltaDist * Math.sin(alphaRad);
+        } else {
+            // Approximate by considering that the robot follows an arc
+            // Calculate the radius of curvature of the circle
+            let R = deltaDist / deltaTheta;
+
+            // Update position
+            X += R * (-Math.sin(alphaRad) + Math.sin(alphaRad + deltaTheta));
+            Y += R * (Math.cos(alphaRad) - Math.cos(alphaRad + deltaTheta));
+
+            // Update heading
+            alphaRad += deltaTheta;
+
+            // Limit heading to +/- PI to be able to turn in both directions
+            if (alphaRad > Math.PI) {
+                alphaRad -= 2 * Math.PI;
+            } else if (alphaRad <= -Math.PI) {
+                alphaRad += 2 * Math.PI;
+            }
+        }
+    }
+
+    /**
+     * Update odometry with new encoder values in ticks
+     * @param rightDeltaTicks Right encoder delta in ticks
+     * @param leftDeltaTicks Left encoder delta in ticks
+     */
+    //% block="update with right delta: %rightDeltaTicks|ticks left delta: %leftDeltaTicks|ticks"
+    export function updateFromTicks(rightDeltaTicks: number, leftDeltaTicks: number) {
+        // Convert ticks to mm
+        let rightDeltaMm = rightDeltaTicks * 1000 / ticksPerMeter;
+        let leftDeltaMm = leftDeltaTicks * 1000 / ticksPerMeter;
+
+        // Call the regular update function
+        update(rightDeltaMm, leftDeltaMm);
     }
 
     /**
