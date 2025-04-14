@@ -845,27 +845,35 @@ namespace odometry {
     }
 
     /**
-     * Get current X position in mm
+     * Get current X position in float mm
      */
-    //% block="get X position (mm)"
+    //% block="get X position (float mm)"
     export function getX(): number {
         return X;
     }
 
     /**
-     * Get current X position in mm
+     * Get current X position round in mm
      */
-    //% block="get X integer position (mm)"
+    //% block="get X position (integer mm)"
     export function getXint(): number {
         return Math.floor(X);
     }
 
     /**
-     * Get current Y position in mm
+     * Get current Y position in float mm
      */
-    //% block="get Y position (mm)"
+    //% block="get Y position (float mm)"
     export function getY(): number {
         return Y;
+    }
+
+    /**
+     * Get current Y position round in mm
+     */
+    //% block="get Y position (integer mm)"
+    export function getYint(): number {
+        return Math.floor(Y);
     }
 
     /**
