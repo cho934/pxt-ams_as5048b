@@ -594,7 +594,7 @@ namespace MagEncoders {
             const encoder2 = (this.sensor2.getRawAngle() - 8192.0) * 4.0;
 
             serial.writeValue("getRawAngle1", this.sensor1.getRawAngle());
-            serial.writeValue("encoder1", encoder1);
+            //serial.writeValue("encoder1", encoder1);
             
     
 
@@ -606,7 +606,7 @@ namespace MagEncoders {
                 deltaEncoderRight = encoder2 - this.encoder2Previous;
                 deltaEncoderLeft = encoder1 - this.encoder1Previous;
             }
-            serial.writeValue("deltaEncoderRight", deltaEncoderRight);
+            //serial.writeValue("deltaEncoderRight", deltaEncoderRight);
             
             
             // Invert if necessary
@@ -616,15 +616,19 @@ namespace MagEncoders {
                 deltaEncoderLeft = -deltaEncoderLeft;
 
             // Convert to normalized values
-            deltaEncoderRight = this.toInt16(Math.floor(deltaEncoderRight)) / 4.0;
-            deltaEncoderLeft = this.toInt16(Math.floor(deltaEncoderLeft)) / 4.0;
+            //deltaEncoderRight = this.toInt16(Math.floor(deltaEncoderRight)) / 4.0;
+            //deltaEncoderLeft = this.toInt16(Math.floor(deltaEncoderLeft)) / 4.0;
+            deltaEncoderRight = this.toInt16(deltaEncoderRight) / 4.0;
+            deltaEncoderLeft = this.toInt16(deltaEncoderLeft) / 4.0;
 
 
             serial.writeValue("deltaEncoderRight final", deltaEncoderRight);
 
             // Update sums
-            this.encoderRSum += Math.floor(deltaEncoderRight);
-            this.encoderLSum += Math.floor(deltaEncoderLeft);
+            //this.encoderRSum += Math.floor(deltaEncoderRight);
+            //this.encoderLSum += Math.floor(deltaEncoderLeft);
+            this.encoderRSum += deltaEncoderRight;
+            this.encoderLSum += deltaEncoderLeft;
 
             // Save previous values
             this.encoder1Previous = encoder1;
