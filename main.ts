@@ -462,12 +462,25 @@ namespace AS5048B {
 
 
 
-
+/*
+__Howto__
+input.onButtonPressed(Button.A, function () {
+    magencoders.stop()
+})
+let magencoders: MagEncoders.MagEncoders = null
+serial.redirectToUSB()
+magencoders = MagEncoders.createMagEncoder(true, false, true)
+magencoders.start()
+loops.everyInterval(50, function () {
+    magencoders.getValues()
+    serial.writeNumbers([magencoders.getLeftTotalCount(), magencoders.getRightTotalCount()])
+})
+basic.forever(function () {
+})
+*/
 
 //% color=#000000 icon="\uf085" block="MAGENCODERS"
 namespace MagEncoders {
-
-
     /**
      * Creates a new MagEncoder instance for dual AS5048B encoders
      * @param is1EncoderRight If the first encoder is connected to the right wheel
@@ -719,9 +732,14 @@ namespace MagEncoders {
 }
 
 
-// Odometry module for MicroBit
-// Calculates position and orientation using wheel encoder data
-/* __Howto__
+
+
+
+
+
+
+/* 
+__Howto__
 // Initialisation avec vos paramètres
 odometry.initialize(1000, 2000);
 
@@ -736,13 +754,15 @@ basic.forever(function() {
 
     // Afficher les informations si nécessaire
     basic.showString("X:" + odometry.X + " Y:" + odometry.Y);
-})*/
-
+})
+*/
+// Odometry module for MicroBit
+// Calculates position and orientation using wheel encoder data
 namespace odometry {
     // Global variables for position tracking
     export let X = 0;           // X position in meters
     export let Y = 0;           // Y position in meters  
-    export let alpha = 0;       // Orientation angle in radians
+    export let alphaRad = 0;       // Orientation angle in radians
 
     // Constants - adjust these based on your robot's specifications
     export let entraxeEnTick = 1000;  // Distance between wheels in encoder ticks
@@ -763,7 +783,7 @@ namespace odometry {
         tickParMetre = ticksPerMeter;
         X = 0;
         Y = 0;
-        alpha = 0;
+        alphaRad = 0;
     }
 
     /**
@@ -773,7 +793,7 @@ namespace odometry {
     export function reset() {
         X = 0;
         Y = 0;
-        alpha = 0;
+        alphaRad = 0;
     }
 
     /**
@@ -783,10 +803,10 @@ namespace odometry {
      * @param angle Orientation in radians
      */
     //% block="set position to x: %x|y: %y|angle: %angle"
-    export function setPosition(x: number, y: number, angle: number) {
+    export function setPosition(x: number, y: number, anglerad: number) {
         X = x;
         Y = y;
-        alpha = angle;
+        alphaRad = anglerad;
     }
 
     /**
@@ -800,23 +820,23 @@ namespace odometry {
         dLeft = leftDelta;
 
         // Calculate angle and distance variations
-        let dAlpha = (dRight - dLeft) / 2;         // Variation of the angle
+        let dAlpha = (dRight - dLeft) / 2;         // Variation of the angle in radians
         let dDelta = (dRight + dLeft) / 2;         // Variation of the forward movement
 
         // Convert to radians and update angle
-        alpha += dAlpha / entraxeEnTick;
+        alphaRad += dAlpha / entraxeEnTick;
 
         // Keep alpha within [-π, π] range
-        while (alpha > Math.PI) {
-            alpha -= 2 * Math.PI;
+        while (alphaRad > Math.PI) {
+            alphaRad -= 2 * Math.PI;
         }
-        while (alpha < -Math.PI) {
-            alpha += 2 * Math.PI;
+        while (alphaRad < -Math.PI) {
+            alphaRad += 2 * Math.PI;
         }
 
         // Calculate position offsets
-        let dX = Math.cos(alpha) * dDelta;
-        let dY = Math.sin(alpha) * dDelta;
+        let dX = Math.cos(alphaRad) * dDelta;
+        let dY = Math.sin(alphaRad) * dDelta;
 
         // Update position in meters
         X += dX / tickParMetre;
@@ -843,8 +863,8 @@ namespace odometry {
      * Get current orientation in radians
      */
     //% block="get orientation (radians)"
-    export function getOrientation(): number {
-        return alpha;
+    export function getOrientationRad(): number {
+        return alphaRad;
     }
 
     /**
@@ -852,7 +872,7 @@ namespace odometry {
      */
     //% block="get orientation (degrees)"
     export function getOrientationDegrees(): number {
-        return alpha * 180 / Math.PI;
+        return alphaRad * 180 / Math.PI;
     }
 
     /**
@@ -868,7 +888,7 @@ namespace odometry {
     }
 
     /**
-     * Calculate angle to a point (relative to current orientation)
+     * Calculate angle in radians to a point (relative to current orientation)
      * @param x X coordinate of the target point
      * @param y Y coordinate of the target point
      */
@@ -879,7 +899,7 @@ namespace odometry {
         let targetAngle = Math.atan2(dy, dx);
 
         // Calculate the difference and normalize to [-π, π]
-        let angleDiff = targetAngle - alpha;
+        let angleDiff = targetAngle - alphaRad;
         while (angleDiff > Math.PI) {
             angleDiff -= 2 * Math.PI;
         }
