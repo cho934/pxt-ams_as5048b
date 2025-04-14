@@ -621,17 +621,25 @@ namespace MagEncoders {
      * @param invertEncoderRight Invert right encoder direction
      * @param invertEncoderLeft Invert left encoder direction
      */
-    //% blockId=as5048b_create_magencoders block="créer encodeurs avec (A1=1,A2=1)=droite %is1EncoderRight|inverser droite %invertRight|inverser gauche %invertLeft"
+    //% blockId=as5048b_create_magencoders block="créer encodeurs avec Sensor1=droite %is1EncoderRight|inverser droite %invertRight|inverser gauche %invertLeft|sensor1 %setsensor1_A1 %setsensor1_A2|sensor2 %setsensor2_A1 %setsensor2_A2"
     //% is1EncoderRight.defl=true
     //% invertRight.defl=false
     //% invertLeft.defl=false
+    //% setsensor1_A1.defl=true
+    //% setsensor1_A2.defl=true
+    //% setsensor2_A1.defl=true
+    //% setsensor2_A2.defl=false
     //% weight=98
     export function createMagEncoder(
         is1EncoderRight: boolean = true,
         invertRight: boolean = false,
-        invertLeft: boolean = false
+        invertLeft: boolean = false,
+        setsensor1_A1: boolean = true,
+        setsensor1_A2: boolean = true,
+        setsensor2_A1: boolean = true,
+        setsensor2_A2: boolean = false
     ): MagEncoders {
-        return new MagEncoders(is1EncoderRight, invertRight, invertLeft);
+        return new MagEncoders(is1EncoderRight, invertRight, invertLeft, setsensor1_A1, setsensor1_A2, setsensor2_A1, setsensor2_A2);
     }
 
 
