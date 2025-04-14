@@ -593,7 +593,8 @@ namespace MagEncoders {
             const encoder1 = (this.sensor1.getRawAngle() - 8192.0) * 4.0;
             const encoder2 = (this.sensor2.getRawAngle() - 8192.0) * 4.0;
 
-            serial.writeValue("getRawAngle1", this.sensor1.getRawAngle());
+            //debug
+            //serial.writeValue("getRawAngle1", this.sensor1.getRawAngle());
             //serial.writeValue("encoder1", encoder1);
             
     
@@ -606,6 +607,8 @@ namespace MagEncoders {
                 deltaEncoderRight = encoder2 - this.encoder2Previous;
                 deltaEncoderLeft = encoder1 - this.encoder1Previous;
             }
+            
+            //debug
             //serial.writeValue("deltaEncoderRight", deltaEncoderRight);
             
             
@@ -621,8 +624,8 @@ namespace MagEncoders {
             deltaEncoderRight = this.toInt16(deltaEncoderRight) / 4.0;
             deltaEncoderLeft = this.toInt16(deltaEncoderLeft) / 4.0;
 
-
-            serial.writeValue("deltaEncoderRight final", deltaEncoderRight);
+            //debug
+            //serial.writeValue("deltaEncoderRight final", deltaEncoderRight);
 
             // Update sums
             //this.encoderRSum += Math.floor(deltaEncoderRight);
