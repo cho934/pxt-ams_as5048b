@@ -850,7 +850,7 @@ namespace odometry {
      * @param rightDeltaMm Right encoder delta in mm
      * @param leftDeltaMm Left encoder delta in mm
      */
-    //% block="update with right delta: %rightDeltaMm|mm left delta: %leftDeltaMm|mm"
+    //% block="update with leftDelta: %leftDeltaMm|mm + rightDelta: %rightDeltaMm|mm "
     export function update(leftDeltaMm: number, rightDeltaMm: number) {
         // Calculate distance traveled and angle variation
         let deltaDist = (leftDeltaMm + rightDeltaMm) / 2;
@@ -888,7 +888,7 @@ namespace odometry {
      * @param rightDeltaTicks Right encoder delta in ticks
      * @param leftDeltaTicks Left encoder delta in ticks
      */
-    //% block="update with right delta: %rightDeltaTicks|ticks left delta: %leftDeltaTicks|ticks"
+    //% block="update with leftDelta: %leftDeltaTicks|ticks + rightDelta: %rightDeltaTicks|ticks"
     export function updateFromTicks(leftDeltaTicks: number, rightDeltaTicks: number) {
         // Convert ticks to mm
         let rightDeltaMm = rightDeltaTicks * 1000 / ticksPerMeter;
