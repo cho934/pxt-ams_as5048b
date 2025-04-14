@@ -1205,6 +1205,7 @@ namespace RobotMovement {
      * @param motorDriver Fonction pour contrôler les moteurs
      * @param encoderReader Fonction pour lire les valeurs des encodeurs
      */
+    //% block="initialize %MotorDriverFunction %EncoderReaderFunction"
     export function initialize(motorDriver: MotorDriverFunction, encoderReader: EncoderReaderFunction): void {
         motorDriverCallback = motorDriver;
         encoderReaderCallback = encoderReader;
@@ -1261,6 +1262,7 @@ namespace RobotMovement {
     /**
      * Arrête les moteurs
      */
+    //% block="stopMotors"
     export function stopMotors(): void {
         if (motorDriverCallback) {
             motorDriverCallback(0, 0, Direction.Forward, Direction.Forward);
@@ -1272,6 +1274,7 @@ namespace RobotMovement {
      * @param distX distance à parcourir en x (mm)
      * @param distY distance à parcourir en y (mm)
      */
+    //% block="movexy %distX %distY"
     export function movexy(distX: number, distY: number): void {
         if (!isInitialized) {
             serial.writeLine("Erreur: système de déplacement non initialisé");
@@ -1305,6 +1308,7 @@ namespace RobotMovement {
      * Tourne le robot d'un angle spécifié en degrés
      * @param angleDegrees angle de rotation en degrés (positif = sens anti-horaire)
      */
+    //% block="turn %angleDegrees"
     export function turn(angleDegrees: number): void {
         if (!isInitialized) {
             serial.writeLine("Erreur: système de déplacement non initialisé");
@@ -1397,6 +1401,7 @@ namespace RobotMovement {
      * Déplace le robot vers l'avant d'une distance spécifiée en mm
      * @param distance distance à parcourir en mm
      */
+    //% block="moveForward %distance"
     function moveForward(distance: number): void {
         if (!isInitialized) {
             serial.writeLine("Erreur: système de déplacement non initialisé");
