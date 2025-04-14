@@ -153,12 +153,28 @@ namespace AS5048B {
             }
         }
 
+        // Méthode de débogage pour comparer 8-bit vs 16-bit
+        private readReg8(reg: number): number {
+            // Utiliser les deux méthodes et comparer
+            let value8 = this.readReg8(reg);
+
+            // Utiliser readReg16 pour obtenir un octet
+            pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8BE);
+            let buffer = pins.i2cReadBuffer(this.i2cAddr, 1);
+            let value16Method = buffer[0];
+
+            serial.writeLine("Reg " + reg + " - readReg8: " + value8 + ", readReg16 method: " + value16Method);
+            return value8;
+        }
+
+
         /**
          * Read register value (8-bit)
          * @param reg Register address
          * @returns 8-bit register value
-         */
+         *//*
         private readReg8(reg: number): number {
+            
             try {
                 pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8BE);
                 //return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
@@ -169,7 +185,7 @@ namespace AS5048B {
                 serial.writeLine("readReg8 I2C error: " + e.message);
                 return 0;
             }
-        }
+        }*/
 
         /**
          * Read register value (16-bit)
