@@ -154,7 +154,7 @@ namespace AS5048B {
         }
 
         // Méthode de débogage pour comparer 8-bit vs 16-bit
-        private readReg8(reg: number): number {
+        private debugReadReg8(reg: number): void {
             // Utiliser les deux méthodes et comparer
             let value8 = this.readReg8(reg);
 
@@ -163,8 +163,10 @@ namespace AS5048B {
             let buffer = pins.i2cReadBuffer(this.i2cAddr, 1);
             let value16Method = buffer[0];
 
-            serial.writeLine("Reg " + reg + " - readReg8: " + value8 + ", readReg16 method: " + value16Method);
-            return value8;
+            pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8BE);
+            let buffer2 =  pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8BE);
+
+            serial.writeLine("Reg " + reg + " - readReg8: " + value8 + ", readReg16 method: " + value16Method + ", readReg8BE method: " + buffer2);
         }
 
 
@@ -172,20 +174,20 @@ namespace AS5048B {
          * Read register value (8-bit)
          * @param reg Register address
          * @returns 8-bit register value
-         *//*
+         */
         private readReg8(reg: number): number {
             
             try {
                 pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8BE);
-                //return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
-                let readBuffer = pins.i2cReadBuffer(this.i2cAddr, 1);
-                return readBuffer[0];
+                return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
+                //let readBuffer = pins.i2cReadBuffer(this.i2cAddr, 1);
+                //return readBuffer[0];
             } catch (e) {
                 // Gestion d'erreur I2C simplifiée
                 serial.writeLine("readReg8 I2C error: " + e.message);
                 return 0;
             }
-        }*/
+        }
 
         /**
          * Read register value (16-bit)
@@ -403,7 +405,8 @@ namespace AS5048B {
         //% blockId=as5048b_get_agc block="%sensor|valeur AGC"
         //% weight=60
         getAgc(): number {
-            return this.readReg8(REG_AGC);
+            //this.debugReadReg8(REG_AGC);
+            return this.readReg8(REG_DIAG); //TODO INVERSION CAUSE A DEBUGGER
         }
 
         /**
@@ -445,7 +448,8 @@ namespace AS5048B {
         //% blockId=as5048b_get_diag block="%sensor|valeur diagnostic"
         //% weight=45
         getDiagnostic(): number {
-            return this.readReg8(REG_DIAG);
+            //this.debugReadReg8(REG_DIAG);
+            return this.readReg8(REG_AGC);//TODO INVERSION CAUSE A DEBUGGER
         }
 
         /**
