@@ -10,10 +10,9 @@ namespace AS5048B {
     const REG_ZEROMSB = 0x16;       // Zero position MSB register
     const REG_ZEROLSB = 0x17;       // Zero position LSB register
 
-//Inversé par rapport à la doc.. pourquoi ??? TODO à trouver
-    const REG_DIAG = 0xFA;          // Diagnostics register
-    const REG_AGC = 0xFB;           // Automatic Gain Control register
-    
+    const REG_AGC = 0xFA;           // Automatic Gain Control register
+    const REG_DIAG = 0xFB;          // Diagnostics register
+
     const REG_MAGNMSB = 0xFC;       // Magnitude MSB register
     const REG_MAGNLSB = 0xFD;       // Magnitude LSB register
     const REG_ANGLMSB = 0xFE;       // Angle MSB register
@@ -236,8 +235,8 @@ namespace AS5048B {
                 let buffer = pins.i2cReadBuffer(this.i2cAddr, 6);
 
                 // Extraire les données du buffer
-                const diag = buffer[0];          // REG_DIAG (0xFA)
-                const agc = buffer[1];           // REG_AGC (0xFB)
+                const agc = buffer[0];           // REG_AGC (0xFA)
+                const diag = buffer[1];          // REG_DIAG (0xFB)
                 const magnMsb = buffer[2];       // REG_MAGNMSB (0xFC)
                 const magnLsb = buffer[3];       // REG_MAGNLSB (0xFD)
                 const angleMsb = buffer[4];      // REG_ANGLMSB (0xFE)
