@@ -717,3 +717,176 @@ namespace MagEncoders {
         }
     }
 }
+
+
+// Odometry module for MicroBit
+// Calculates position and orientation using wheel encoder data
+/* __Howto__
+// Initialisation avec vos paramètres
+odometry.initialize(1000, 2000);
+
+// Dans votre boucle principale ou gestionnaire d'événements
+basic.forever(function() {
+    // Obtenir les valeurs delta des encodeurs (à adapter selon votre système)
+    let rightDelta = getEncoderRightDelta();
+    let leftDelta = getEncoderLeftDelta();
+
+    // Mettre à jour l'odométrie
+    odometry.update(rightDelta, leftDelta);
+
+    // Afficher les informations si nécessaire
+    basic.showString("X:" + odometry.X + " Y:" + odometry.Y);
+})*/
+
+namespace odometry {
+    // Global variables for position tracking
+    export let X = 0;           // X position in meters
+    export let Y = 0;           // Y position in meters  
+    export let alpha = 0;       // Orientation angle in radians
+
+    // Constants - adjust these based on your robot's specifications
+    export let entraxeEnTick = 1000;  // Distance between wheels in encoder ticks
+    export let tickParMetre = 2000;   // Number of ticks per meter
+
+    // Variables to store encoder deltas
+    let dRight = 0;
+    let dLeft = 0;
+
+    /**
+     * Initialize the odometry module with specific parameters
+     * @param wheelbase Distance between wheels in encoder ticks
+     * @param ticksPerMeter Number of encoder ticks per meter
+     */
+    //% block="initialize odometry with wheelbase %wheelbase|ticks and %ticksPerMeter|ticks per meter"
+    export function initialize(wheelbase: number, ticksPerMeter: number) {
+        entraxeEnTick = wheelbase;
+        tickParMetre = ticksPerMeter;
+        X = 0;
+        Y = 0;
+        alpha = 0;
+    }
+
+    /**
+     * Reset position and orientation to zero
+     */
+    //% block="reset odometry"
+    export function reset() {
+        X = 0;
+        Y = 0;
+        alpha = 0;
+    }
+
+    /**
+     * Set position and orientation to specific values
+     * @param x X position in meters
+     * @param y Y position in meters
+     * @param angle Orientation in radians
+     */
+    //% block="set position to x: %x|y: %y|angle: %angle"
+    export function setPosition(x: number, y: number, angle: number) {
+        X = x;
+        Y = y;
+        alpha = angle;
+    }
+
+    /**
+     * Update odometry with new encoder values
+     * @param rightDelta Right encoder delta in ticks
+     * @param leftDelta Left encoder delta in ticks
+     */
+    //% block="update with right delta: %rightDelta|left delta: %leftDelta"
+    export function update(rightDelta: number, leftDelta: number) {
+        dRight = rightDelta;
+        dLeft = leftDelta;
+
+        // Calculate angle and distance variations
+        let dAlpha = (dRight - dLeft) / 2;         // Variation of the angle
+        let dDelta = (dRight + dLeft) / 2;         // Variation of the forward movement
+
+        // Convert to radians and update angle
+        alpha += dAlpha / entraxeEnTick;
+
+        // Keep alpha within [-π, π] range
+        while (alpha > Math.PI) {
+            alpha -= 2 * Math.PI;
+        }
+        while (alpha < -Math.PI) {
+            alpha += 2 * Math.PI;
+        }
+
+        // Calculate position offsets
+        let dX = Math.cos(alpha) * dDelta;
+        let dY = Math.sin(alpha) * dDelta;
+
+        // Update position in meters
+        X += dX / tickParMetre;
+        Y += dY / tickParMetre;
+    }
+
+    /**
+     * Get current X position in meters
+     */
+    //% block="get X position (meters)"
+    export function getX(): number {
+        return X;
+    }
+
+    /**
+     * Get current Y position in meters
+     */
+    //% block="get Y position (meters)"
+    export function getY(): number {
+        return Y;
+    }
+
+    /**
+     * Get current orientation in radians
+     */
+    //% block="get orientation (radians)"
+    export function getOrientation(): number {
+        return alpha;
+    }
+
+    /**
+     * Get current orientation in degrees
+     */
+    //% block="get orientation (degrees)"
+    export function getOrientationDegrees(): number {
+        return alpha * 180 / Math.PI;
+    }
+
+    /**
+     * Calculate distance to a point
+     * @param x X coordinate of the target point
+     * @param y Y coordinate of the target point
+     */
+    //% block="distance to point x: %x|y: %y"
+    export function distanceTo(x: number, y: number): number {
+        let dx = x - X;
+        let dy = y - Y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * Calculate angle to a point (relative to current orientation)
+     * @param x X coordinate of the target point
+     * @param y Y coordinate of the target point
+     */
+    //% block="angle to point x: %x|y: %y"
+    export function angleTo(x: number, y: number): number {
+        let dx = x - X;
+        let dy = y - Y;
+        let targetAngle = Math.atan2(dy, dx);
+
+        // Calculate the difference and normalize to [-π, π]
+        let angleDiff = targetAngle - alpha;
+        while (angleDiff > Math.PI) {
+            angleDiff -= 2 * Math.PI;
+        }
+        while (angleDiff < -Math.PI) {
+            angleDiff += 2 * Math.PI;
+        }
+
+        return angleDiff;
+    }
+}
