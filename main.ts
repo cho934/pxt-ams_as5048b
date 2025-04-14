@@ -159,10 +159,10 @@ namespace AS5048B {
          * @returns 8-bit register value
          */
         private readReg8(reg: number): number {
-            pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8LE);
-            return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
-            //let readBuffer = pins.i2cReadBuffer(this.i2cAddr, 1);
-            //return readBuffer[0];
+            //pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8LE);
+            //return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
+            let readBuffer = pins.i2cReadBuffer(this.i2cAddr, 1);
+            return readBuffer[0];
         }
 
         /**
@@ -277,13 +277,16 @@ namespace AS5048B {
                 // Stocker la valeur brute comme dernière valeur d'angle connue
                 this.lastAngleRaw = rawAngle;
 
+                /*
+                //debug
                 serial.writeLine("rawAngle=" + rawAngle);
                 serial.writeLine("agc=" + agc);
                 serial.writeLine("diag=" + diag);
                 serial.writeLine("magnitude=" + magnitude);
                 serial.writeLine("isValid=" + isValid);
                 serial.writeLine("errorType=" + errorType);
-
+                */
+                
                 // Retourner toutes les données dans un objet
                 return {
                     rawAngle: rawAngle,
