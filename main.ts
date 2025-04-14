@@ -323,6 +323,7 @@ namespace AS5048B {
                 };
             } catch (e) {
                 // En cas d'erreur I2C, retourner un objet avec des données invalides
+                //TODO en cas d'error prendre la derniere valeur
                 serial.writeLine("Erreur I2C dans getRawAngleWithDiag: " + e.message);
                 return {
                     rawAngle: 0,
@@ -693,8 +694,15 @@ namespace MagEncoders {
         //% blockId=as5048b_magencoders_start block="%encoders|démarrer"
         //% weight=100
         public start(): void {
-            this.encoder1Previous = ((this.sensor1.getRawAngle() - 8192.0) * 4.0);
-            this.encoder2Previous = ((this.sensor2.getRawAngle() - 8192.0) * 4.0);
+            let data1 = this.sensor1.getRawAngleWithDiag();
+            if (data1.isValid) {
+                this.encoder1Previous = ((data1.rawAngle - 8192.0) * 4.0);
+            }
+            let data2 = this.sensor2.getRawAngleWithDiag();
+            if (data2.isValid) {
+                this.encoder2Previous = ((data2.rawAngle - 8192.0) * 4.0);
+            }
+            
             this.encoderRSum = 0;
             this.encoderLSum = 0;
         }
@@ -933,12 +941,12 @@ namespace odometry {
 
     /**
      * Initialize the odometry module with specific parameters
-     * @param wheelbase Distance between wheels in mm
+     * @param trackWidth Distance between encoders' wheels in mm
      * @param ticksPerMeter Number of encoder ticks per meter
      */
-    //% block="initialize odometry with wheelbase %wheelbase|mm and %ticksPerMeter|ticks per meter"
+    //% block="initialize odometry with trackWidth %trackWidth|mm and %ticksPerMeter|ticks per meter"
     export function initialize(entraxe_mm: number, nbticksPerMeter: number) {
-        // Convert wheelbase from mm to ticks
+        // Convert trackWidth from mm to ticks
         odometry.entraxeInMM = entraxe_mm ;//* nbticksPerMeter / 1000;
         odometry.ticksPerMeter = nbticksPerMeter;
         X = 0;
