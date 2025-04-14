@@ -474,7 +474,7 @@ namespace MagEncoders {
      * @param invertEncoderRight Invert right encoder direction
      * @param invertEncoderLeft Invert left encoder direction
      */
-    //% blockId=as5048b_create_magencoders block="créer encodeurs avec 1=droite %is1EncoderRight|inverser droite %invertRight|inverser gauche %invertLeft"
+    //% blockId=as5048b_create_magencoders block="créer encodeurs avec (A1=1,A2=1)=droite %is1EncoderRight|inverser droite %invertRight|inverser gauche %invertLeft"
     //% is1EncoderRight.defl=true
     //% invertRight.defl=false
     //% invertLeft.defl=false
