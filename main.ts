@@ -564,7 +564,15 @@ namespace MagEncoders {
 
 
         private toInt16(value: number): number {
-            return (((value | 0) << 16) >> 16);
+            //return (((value | 0) << 16) >> 16);
+            // Garder seulement les 16 bits de poids faible
+            let intValue = value & 0xFFFF;
+
+            // Si le bit 15 est à 1, c'est un nombre négatif
+            if (intValue & 0x8000) {
+                return intValue - 0x10000; // Soustraire 2^16 pour obtenir la valeur négative correcte
+            }
+            return intValue;
         }
 
         /**
