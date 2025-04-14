@@ -48,7 +48,7 @@ namespace AS5048B {
      * @param a2 Address pin A2 state
      * @returns Calculated I2C address
      */
-    function calculateAddress(a1: number, a2: number): number {
+    function calculateAddress(a1: boolean, a2: boolean): number {
         return 0x40 | (!a1 ? 0x2 : 0) | (!a2 ? 0x1 : 0);
     }
 
@@ -61,7 +61,7 @@ namespace AS5048B {
     //% a1.defl=1
     //% a2.defl=1
     //% weight=100
-    export function createSensorWithPins(a1: number = 1, a2: number = 1): AS5048BSensor {
+    export function createSensorWithPins(a1: boolean = true, a2: boolean = true): AS5048BSensor {
         const address = calculateAddress(a1, a2);
         return new AS5048BSensor(address);
     }
@@ -648,6 +648,10 @@ namespace MagEncoders {
         private is1EncoderRight: boolean;
         private invertEncoderR: boolean;
         private invertEncoderL: boolean;
+       //private sensor1_A1: boolean;
+        //private sensor1_A2: boolean;
+        //private sensor2_A1: boolean;
+        //private sensor2_A2: boolean;
 
         private encoder1Previous: number;
         private encoder2Previous: number;
@@ -667,13 +671,17 @@ namespace MagEncoders {
         constructor(
             is1EncoderRight: boolean = true,
             invertEncoderRight: boolean = false,
-            invertEncoderLeft: boolean = false
+            invertEncoderLeft: boolean = false,
+            setsensor1_A1: boolean = true,
+            setsensor1_A2: boolean = true,
+            setsensor2_A1: boolean = true,
+            setsensor2_A2: boolean = false
         ) {
             // Configure AS5048B sensors with proper addresses
             // First sensor (A1=1, A2=1) => Address 0x40
             // Second sensor (A1=0, A2=1) => Address 0x42
-            this.sensor1 = AS5048B.createSensorWithPins(1, 1);
-            this.sensor2 = AS5048B.createSensorWithPins(0, 1);
+            this.sensor1 = AS5048B.createSensorWithPins(setsensor1_A1, setsensor1_A2);
+            this.sensor2 = AS5048B.createSensorWithPins(setsensor2_A1, setsensor2_A2);
 
             this.is1EncoderRight = is1EncoderRight;
             this.invertEncoderR = invertEncoderRight;
