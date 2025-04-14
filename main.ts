@@ -159,10 +159,16 @@ namespace AS5048B {
          * @returns 8-bit register value
          */
         private readReg8(reg: number): number {
-            //pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8LE);
-            //return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
-            let readBuffer = pins.i2cReadBuffer(this.i2cAddr, 1);
-            return readBuffer[0];
+            try {
+                pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8LE);
+                return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
+                //let readBuffer = pins.i2cReadBuffer(this.i2cAddr, 1);
+                //return readBuffer[0];
+            } catch (e) {
+                // Gestion d'erreur I2C simplifiée
+                serial.writeLine("readReg8 I2C error: " + e.message);
+                return 0;
+            }
         }
 
         /**
@@ -202,7 +208,7 @@ namespace AS5048B {
                 return readValue;
             } catch (e) {
                 // Gestion d'erreur I2C simplifiée
-                serial.writeLine("readReg16 I2C error");
+                serial.writeLine("readReg16 I2C error: " + e.message);
                 return 0;
             }
         }
