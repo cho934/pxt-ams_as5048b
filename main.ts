@@ -853,6 +853,14 @@ namespace odometry {
     }
 
     /**
+     * Get current X position in mm
+     */
+    //% block="get X integer position (mm)"
+    export function getXint(): number {
+        return Math.floor(X);
+    }
+
+    /**
      * Get current Y position in mm
      */
     //% block="get Y position (mm)"
