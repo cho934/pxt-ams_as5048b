@@ -161,7 +161,7 @@ namespace AS5048B {
         private readReg8(reg: number): number {
             try {
                 pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8BE);
-                return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8BE);
+                return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
                 //let readBuffer = pins.i2cReadBuffer(this.i2cAddr, 1);
                 //return readBuffer[0];
             } catch (e) {
