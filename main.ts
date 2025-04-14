@@ -9,7 +9,7 @@ namespace AS5048B {
     const REG_ADDR = 0x15;          // Address register
     const REG_ZEROMSB = 0x16;       // Zero position MSB register
     const REG_ZEROLSB = 0x17;       // Zero position LSB register
-//Inversion REG_DIAG / REG_AGC ???
+//j'ai inversé REG_DIAG / REG_AGC ???
     const REG_DIAG = 0xFA;          // Diagnostics register
     const REG_AGC = 0xFB;           // Automatic Gain Control register
     const REG_MAGNMSB = 0xFC;       // Magnitude MSB register
@@ -26,6 +26,19 @@ namespace AS5048B {
     const U_DEG = 3;                // Degrees (0.0-359.98)
     const U_RAD = 4;                // Radians (0.0-6.28)
     const U_GRAD = 5;               // Gradians (0.0-400.0)
+
+    /**
+     * Structure pour stocker les données et l'état de diagnostic de l'encodeur
+     */
+    export interface AS5048BData {
+        rawAngle: number;      // Angle brut (0-16383)
+        angle: number;         // Angle en degrés (0-359.98)
+        magnitude: number;     // Magnitude du champ magnétique
+        agc: number;           // Valeur de contrôle de gain automatique
+        diagnostics: number;   // Valeur du registre de diagnostic
+        isValid: boolean;      // Indique si les données sont valides
+        errorType: string;     // Type d'erreur si les données ne sont pas valides
+    }
 
     /**
      * Calculate the I2C address based on a1 and a2 pins
@@ -206,6 +219,96 @@ namespace AS5048B {
         }
 
         /**
+             * Lit l'angle brut et les informations de diagnostic en une seule requête I2C
+             * Lit les registres 0xFA à 0xFF en une seule opération
+             * @returns Objet contenant l'angle et les informations de diagnostic
+             */
+        //% blockId=as5048b_raw_angle_with_diag block="%sensor|angle brut avec diagnostic"
+        //% weight=74
+        getRawAngleWithDiag(): AS5048BData {
+            try {
+                // Commencer la lecture à partir du registre 0xFA (REG_DIAG)
+                pins.i2cWriteNumber(this.i2cAddr, REG_DIAG, NumberFormat.UInt8BE);
+
+                // Lire les 6 octets consécutifs (de 0xFA à 0xFF)
+                let buffer = pins.i2cReadBuffer(this.i2cAddr, 6);
+
+                // Extraire les données du buffer
+                const diag = buffer[0];          // REG_DIAG (0xFA)
+                const agc = buffer[1];           // REG_AGC (0xFB)
+                const magnMsb = buffer[2];       // REG_MAGNMSB (0xFC)
+                const magnLsb = buffer[3];       // REG_MAGNLSB (0xFD)
+                const angleMsb = buffer[4];      // REG_ANGLMSB (0xFE)
+                const angleLsb = buffer[5];      // REG_ANGLLSB (0xFF)
+
+                // Combiner les octets pour obtenir l'angle brut (14 bits)
+                let rawAngle = (angleMsb << 6) + (angleLsb & 0x3F);
+
+                // Gérer la rotation dans le sens horaire si nécessaire
+                if (this.clockWise) {
+                    rawAngle = 0x3FFF - rawAngle; // 0x3FFF = 16383 (14 bits à 1)
+                }
+
+                // Combiner les octets pour obtenir la magnitude
+                const magnitude = (magnMsb << 6) + (magnLsb & 0x3F);
+
+                // Vérifier la validité des données à partir du registre de diagnostic
+                let isValid = true;
+                let errorType = "";
+
+                if ((diag & 0x0001) !== 1) {
+                    isValid = false;
+                    errorType = "OFFSET COMPENSATION NOT FINISHED";
+                }else if ((diag & 0x0010) !== 0) {
+                    isValid = false;
+                    errorType = "CORDIC_OVERFLOW";
+                } else if ((diag & 0x0100) !== 0) {
+                    isValid = false;
+                    errorType = "MAGNET_TOO_WEAK";
+                } else if ((diag & 0x1000) !== 0) {
+                    isValid = false;
+                    errorType = "MAGNET_TOO_STRONG";
+                }
+
+                // Calculer l'angle en degrés
+                const angleDeg = (rawAngle * 360) / RESOLUTION;
+
+                // Stocker la valeur brute comme dernière valeur d'angle connue
+                this.lastAngleRaw = rawAngle;
+
+                serial.writeLine("rawAngle=" + rawAngle);
+                serial.writeLine("agc=" + agc);
+                serial.writeLine("diag=" + diag);
+                serial.writeLine("magnitude=" + magnitude);
+                serial.writeLine("isValid=" + isValid);
+                serial.writeLine("errorType=" + errorType);
+
+                // Retourner toutes les données dans un objet
+                return {
+                    rawAngle: rawAngle,
+                    angle: angleDeg,
+                    magnitude: magnitude,
+                    agc: agc,
+                    diagnostics: diag,
+                    isValid: isValid,
+                    errorType: errorType
+                };
+            } catch (e) {
+                // En cas d'erreur I2C, retourner un objet avec des données invalides
+                serial.writeLine("Erreur I2C dans getRawAngleWithDiag: " + e.message);
+                return {
+                    rawAngle: 0,
+                    angle: 0,
+                    magnitude: 0,
+                    agc: 0,
+                    diagnostics: 0,
+                    isValid: false,
+                    errorType: "I2C_ERROR"
+                };
+            }
+        }
+
+        /**
          * Get the raw angle value (0-16383)
          * @returns Raw angle value (14-bit)
          */
@@ -217,7 +320,7 @@ namespace AS5048B {
             // Handle clockwise rotation if needed
             if (this.clockWise) {
                 // 0b11111111111111 correspond à 16383 en décimal (0x3FFF) (14 bits à 1)
-                rawValue = 0b11111111111111 - rawValue;
+                rawValue = 0x3FFF - rawValue;
             }
 
             this.lastAngleRaw = rawValue;
@@ -337,7 +440,7 @@ namespace AS5048B {
         //% weight=35
         hasCordicOverflow(): boolean {
             const diag = this.getDiagnostic();
-            return (diag & 0x0001) !== 0;
+            return (diag & 0x0010) !== 0;
         }
 
         /**
@@ -348,7 +451,7 @@ namespace AS5048B {
         //% weight=30
         isMagnetTooStrong(): boolean {
             const diag = this.getDiagnostic();
-            return (diag & 0x0008) !== 0;
+            return (diag & 0x1000) !== 0;
         }
 
         /**
@@ -359,7 +462,7 @@ namespace AS5048B {
         //% weight=25
         isMagnetTooWeak(): boolean {
             const diag = this.getDiagnostic();
-            return (diag & 0x0004) !== 0;
+            return (diag & 0x0100) !== 0;
         }
 
         /**
@@ -601,10 +704,28 @@ namespace MagEncoders {
             this.deltaEncoderRightFiltered=0;
             this.deltaEncoderLeftFiltered=0;
 
+            let data1 = this.sensor1.getRawAngleWithDiag();
+            let data2 = this.sensor2.getRawAngleWithDiag();
+
             //utilisation du depassement d'un int16
             //[0;16383] -8192 * 4 = [-32768;32764]
-            const encoder1 = (this.sensor1.getRawAngle() - 8192.0) * 4.0;
-            const encoder2 = (this.sensor2.getRawAngle() - 8192.0) * 4.0;
+            //const encoder1 = (this.sensor1.getRawAngle() - 8192.0) * 4.0;
+            //const encoder2 = (this.sensor2.getRawAngle() - 8192.0) * 4.0;
+            let encoder1 = 0;
+            let encoder2 = 0;
+            if (data1.isValid)
+            {
+                encoder1 = (data1.rawAngle - 8192.0) * 4.0;
+            } else {
+                // Gérer l'erreur
+                serial.writeString("Error:data1: " + data1.errorType + "\n");
+            }
+            if (data2.isValid) {
+                encoder2 = (data2.rawAngle - 8192.0) * 4.0;
+            } else {
+                // Gérer l'erreur
+                serial.writeString("Error:data2: " + data2.errorType + "\n");
+            }
 
             //debug
             //serial.writeValue("getRawAngle1", this.sensor1.getRawAngle());
@@ -614,11 +735,19 @@ namespace MagEncoders {
 
             // Determine deltas based on configuration
             if (this.is1EncoderRight) {
-                deltaEncoderRight = encoder1 - this.encoder1Previous;
-                deltaEncoderLeft = encoder2 - this.encoder2Previous;
+                if (data1.isValid) {
+                    deltaEncoderRight = encoder1 - this.encoder1Previous;
+                }
+                if (data2.isValid) {
+                    deltaEncoderLeft = encoder2 - this.encoder2Previous;
+                }
             } else {
-                deltaEncoderRight = encoder2 - this.encoder2Previous;
-                deltaEncoderLeft = encoder1 - this.encoder1Previous;
+                if (data2.isValid) {
+                    deltaEncoderRight = encoder2 - this.encoder2Previous;
+                }
+                if (data1.isValid) {
+                    deltaEncoderLeft = encoder1 - this.encoder1Previous;
+                }
             }
             
             //debug
