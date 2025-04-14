@@ -9,9 +9,9 @@ namespace AS5048B {
     const REG_ADDR = 0x15;          // Address register
     const REG_ZEROMSB = 0x16;       // Zero position MSB register
     const REG_ZEROLSB = 0x17;       // Zero position LSB register
-//j'ai inversé REG_DIAG / REG_AGC ???
-    const REG_DIAG = 0xFA;          // Diagnostics register
-    const REG_AGC = 0xFB;           // Automatic Gain Control register
+
+    const REG_AGC = 0xFA;           // Automatic Gain Control register
+    const REG_DIAG = 0xFB;          // Diagnostics register
     const REG_MAGNMSB = 0xFC;       // Magnitude MSB register
     const REG_MAGNLSB = 0xFD;       // Magnitude LSB register
     const REG_ANGLMSB = 0xFE;       // Angle MSB register
@@ -158,8 +158,8 @@ namespace AS5048B {
          * @returns 8-bit register value
          */
         private readReg8(reg: number): number {
-            pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8BE);
-            return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8BE);
+            pins.i2cWriteNumber(this.i2cAddr, reg, NumberFormat.UInt8LE);
+            return pins.i2cReadNumber(this.i2cAddr, NumberFormat.UInt8LE);
             //let readBuffer = pins.i2cReadBuffer(this.i2cAddr, 1);
             //return readBuffer[0];
         }
