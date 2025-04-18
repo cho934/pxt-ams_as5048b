@@ -903,3 +903,179 @@ namespace MagEncoders {
         }
     }
 }
+
+
+
+
+
+
+
+//% color=#000000 icon="\uf085" block="SINGLE_MAGENCODER"
+namespace SingleMagEncoder {
+    /**
+     * Creates a new MagEncoder instance for one AS5048B encoder
+     * @param isInverted Invert encoder direction
+     */
+    //% blockId=as5048b_create_magencoder block="créer encodeur avec inversion %isinverted|sensor1 A1-A2 %setsensor1_A1 %setsensor1_A2"
+    //% isInverted.defl=false
+    //% setsensor1_A1.defl=true
+    //% setsensor1_A2.defl=true
+    //% weight=98
+    export function createSingleMagEncoder(
+        isInverted: boolean = false,
+        setsensor1_A1: boolean = true,
+        setsensor1_A2: boolean = true
+    ): SingleMagEncoder {
+        return new SingleMagEncoder(isInverted, setsensor1_A1, setsensor1_A2);
+    }
+
+    /**
+     * Class for managing ONE magnetic rotary encoders (AS5048B)
+     * Used for differential drive robots with one single encoder
+     */
+    //% color=#000000
+    //% blockId=as5048b_magencoder_class
+    //% block="encodeur magnétique
+    export class SingleMagEncoder {
+        private sensor1: AS5048B.AS5048BSensor;
+        private invertEncoder1: number;
+        private encoder1Previous: number;
+        public encoder1Sum: number;
+        public deltaEncoder1Filtered: number;
+
+        /**
+         * Constructor for magnetic encoders
+         * @param invertEncoder1 If the first encoder is on the wheel
+         * @param setsensor1_A1 Switch A1
+         * @param setsensor1_A2 Switch A2
+         */
+        constructor(
+            invertEncoder1: boolean = false,
+            setsensor1_A1: boolean = true,
+            setsensor1_A2: boolean = true
+
+        ) {
+            // Configure AS5048B sensor with proper addresse
+            // First sensor (A1=1, A2=1) => Address 0x40
+            this.sensor1 = AS5048B.createSensorWithPins(setsensor1_A1, setsensor1_A2);
+            this.encoder1Previous = 0;
+            this.encoder1Sum = 0;
+            this.deltaEncoder1Filtered = 0; // encoder delta values
+
+        }
+
+        /**
+         * Start encoders and initialize counters
+         */
+        //% blockId=as5048b_magencoder_start block="%singleEncoder|démarrer"
+        //% weight=100
+        public start(): void {
+            let data1 = this.sensor1.getRawAngleWithDiag();
+            if (data1.isValid) {
+                this.encoder1Previous = ((data1.rawAngle - 8192.0) * 4.0);
+            }
+            this.encoder1Sum = 0;
+        }
+
+        /**
+         * Reset encoders and counters
+         */
+        //% blockId=as5048b_magencoders_stop block="%singleEncoder|réinitialiser"
+        //% weight=95
+        public stop(): void {
+            this.start(); // Reset values
+        }
+
+        private toInt16(value: number): number {
+            //return (((value | 0) << 16) >> 16);
+            // Garder seulement les 16 bits de poids faible
+            let intValue = value & 0xFFFF;
+
+            // Si le bit 15 est à 1, c'est un nombre négatif
+            if (intValue & 0x8000) {
+                return intValue - 0x10000; // Soustraire 2^16 pour obtenir la valeur négative correcte
+            }
+            return intValue;
+        }
+
+        /**
+         * Get encoder values (delta movement since last reading)
+         * @returns Object with encoder delta values
+         */
+        //% blockId=as5048b_magencoder_get_values block="%singleEncoder|lire valeurs"
+        //% weight=90
+        public getValues(): void {
+            let deltaEncoder1 = 0.0;
+            this.deltaEncoder1Filtered = 0;
+            let data1 = this.sensor1.getRawAngleWithDiag();
+
+            //utilisation du depassement d'un int16
+            //[0;16383] -8192 * 4 = [-32768;32764]
+            //const encoder1 = (this.sensor1.getRawAngle() - 8192.0) * 4.0;
+            let encoder1 = 0;
+
+            if (data1.isValid) {
+                encoder1 = (data1.rawAngle - 8192.0) * 4.0;
+            } else {
+                // Gérer l'erreur
+                serial.writeString("Error:data1: " + data1.errorType + "\n");
+            }
+
+            // Invert if necessary
+            if (this.invertEncoder1)
+                deltaEncoder1 = -deltaEncoder1;
+           
+
+            // Convert to normalized values
+            //deltaEncoder1 = this.toInt16(Math.floor(deltaEncoder1)) / 4.0;
+            deltaEncoder1 = this.toInt16(deltaEncoder1) / 4.0;
+
+            //debug
+            //serial.writeValue("deltaEncoder1 final", deltaEncoder1);
+
+            // Update sums
+            //this.encoder1Sum += Math.floor(deltaEncoder1);
+            this.encoder1Sum += deltaEncoder1;
+
+            // Save previous values
+            this.encoder1Previous = encoder1;
+            this.deltaEncoder1Filtered = deltaEncoder1;
+        }
+
+        /**
+         * Get right encoder value
+         */
+        //% blockId=as5048b_magencoder_get_right block="%singleEncoder|valeur delta encodeur"
+        //% weight=85
+        public getDeltaValue(): number {
+            return this.deltaEncoder1Filtered;
+        }
+
+        /**
+         * Get total right encoder count
+         */
+        //% blockId=as5048b_magencoder_get_total_right block="%singleEncoder|compteur total"
+        //% weight=75
+        public getTotalCount(): number {
+            return this.encoder1Sum;
+        }
+
+        /**
+         * Reset total encoder counts
+         */
+        //% blockId=as5048b_magencoder_reset_total block="%singleEncoder|réinitialiser compteur"
+        //% weight=70
+        public resetTotalCount(): void {
+            this.encoder1Sum = 0;
+        }
+
+        /**
+         * Check if encoder1 is connected
+         */
+        //% blockId=as5048b_magencoder_check block="%singleEncoder|encodeur connecté ?"
+        //% weight=66
+        public getEncoder1Connected(): boolean {
+            return this.sensor1.isConnected();
+        }
+    }
+}
