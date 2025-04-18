@@ -980,9 +980,9 @@ namespace SingleMagEncoder {
         /**
          * Reset encoders and counters
          */
-        //% blockId=as5048b_magencoders_stop block="%singleEncoder|réinitialiser"
+        //% blockId=as5048b_magencoder_stop block="%singleEncoder|réinitialiser"
         //% weight=95
-        public stop(): void {
+        public reset(): void {
             this.start(); // Reset values
         }
 
