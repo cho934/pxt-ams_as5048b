@@ -916,21 +916,23 @@ namespace SingleMagEncoder {
      * Creates a new MagEncoder instance for one AS5048B encoder
      * @param isInverted Invert encoder direction
      */
-    //% blockId=as5048b_create_magencoder block="créer encodeur avec inversion %isinverted|sensor1 A1-A2 %setsensor1_A1 %setsensor1_A2"
+    //% blockId=as5048b_create_magencoder block="créer encodeur avec inversion %isInverted|A1-A2 %setsensor1_A1 %setsensor1_A2|ticks par mètre %setnbTicksParMetre"
     //% isInverted.defl=false
     //% setsensor1_A1.defl=true
     //% setsensor1_A2.defl=true
+    //% setnbTicksParMetre.defl=125000
     //% weight=98
     export function createSingleMagEncoder(
         isInverted: boolean = false,
         setsensor1_A1: boolean = true,
-        setsensor1_A2: boolean = true
+        setsensor1_A2: boolean = true,
+        setnbTicksParMetre: number  = 125000
     ): SingleMagEncoder {
-        return new SingleMagEncoder(isInverted, setsensor1_A1, setsensor1_A2);
+        return new SingleMagEncoder(isInverted, setsensor1_A1, setsensor1_A2, setnbTicksParMetre);
     }
 
     /**
-     * Class for managing ONE magnetic rotary encoders (AS5048B)
+     * Class for managing ONE magnetic rotary encoder (AS5048B)
      * Used for differential drive robots with one single encoder
      */
     //% color=#000000
@@ -942,9 +944,10 @@ namespace SingleMagEncoder {
         private encoder1Previous: number;
         public encoder1Sum: number;
         public deltaEncoder1Filtered: number;
+        public nbTicksParMetre: number;
 
         /**
-         * Constructor for magnetic encoders
+         * Constructor for magnetic encoder
          * @param invertEncoder1 If the first encoder is on the wheel
          * @param setsensor1_A1 Switch A1
          * @param setsensor1_A2 Switch A2
@@ -952,7 +955,8 @@ namespace SingleMagEncoder {
         constructor(
             invertEncoder1: boolean = false,
             setsensor1_A1: boolean = true,
-            setsensor1_A2: boolean = true
+            setsensor1_A2: boolean = true,
+            setnbTicksParMetre: number
 
         ) {
             // Configure AS5048B sensor with proper addresse
@@ -961,11 +965,11 @@ namespace SingleMagEncoder {
             this.encoder1Previous = 0;
             this.encoder1Sum = 0;
             this.deltaEncoder1Filtered = 0; // encoder delta values
-
+            this.nbTicksParMetre = setnbTicksParMetre;
         }
 
         /**
-         * Start encoders and initialize counters
+         * Start encoder and initialize counters
          */
         //% blockId=as5048b_magencoder_start block="%singleEncoder|démarrer"
         //% weight=100
@@ -978,9 +982,9 @@ namespace SingleMagEncoder {
         }
 
         /**
-         * Reset encoders and counters
+         * Reset encoder and counters
          */
-        //% blockId=as5048b_magencoder_stop block="%singleEncoder|réinitialiser"
+        //% blockId=as5048b_magencoder_reset block="%singleEncoder|réinitialiser"
         //% weight=95
         public reset(): void {
             this.start(); // Reset values
@@ -1021,10 +1025,13 @@ namespace SingleMagEncoder {
                 serial.writeString("Error:data1: " + data1.errorType + "\n");
             }
 
+            if (data1.isValid) {
+                deltaEncoder1 = encoder1 - this.encoder1Previous;
+            }
+
             // Invert if necessary
             if (this.invertEncoder1)
                 deltaEncoder1 = -deltaEncoder1;
-           
 
             // Convert to normalized values
             //deltaEncoder1 = this.toInt16(Math.floor(deltaEncoder1)) / 4.0;
@@ -1043,7 +1050,7 @@ namespace SingleMagEncoder {
         }
 
         /**
-         * Get right encoder value
+         * Get delta encoder value
          */
         //% blockId=as5048b_magencoder_get_right block="%singleEncoder|valeur delta encodeur"
         //% weight=85
@@ -1052,12 +1059,21 @@ namespace SingleMagEncoder {
         }
 
         /**
-         * Get total right encoder count
+         * Get total encoder count
          */
-        //% blockId=as5048b_magencoder_get_total_right block="%singleEncoder|compteur total"
+        //% blockId=as5048b_magencoder_get_total_count block="%singleEncoder|compteur total"
         //% weight=75
         public getTotalCount(): number {
             return this.encoder1Sum;
+        }
+
+        /**
+         * Get total distance
+         */
+        //% blockId=as5048b_magencoder_get_total_distance block="%singleEncoder|distance parcourue"
+        //% weight=76
+        public getDistance(): number {
+            return this.encoder1Sum * 1000 / this.nbTicksParMetre ;
         }
 
         /**
@@ -1070,7 +1086,7 @@ namespace SingleMagEncoder {
         }
 
         /**
-         * Check if encoder1 is connected
+         * Check if encoder is connected
          */
         //% blockId=as5048b_magencoder_check block="%singleEncoder|encodeur connecté ?"
         //% weight=66
