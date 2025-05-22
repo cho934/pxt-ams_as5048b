@@ -1,5 +1,6 @@
 {
     "name": "pxt-ams_as5048b",
+    "version": "1.0.0",
     "description": "",
     "dependencies": {
         "core": "*"
