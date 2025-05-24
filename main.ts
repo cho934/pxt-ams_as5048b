@@ -1,7 +1,7 @@
 /**
 * AS5048B Magnetic Rotary Encoder driver for MicroBit
 */
-//% color=#0fbc11 icon="\uf085" block="AS5048B"
+//% color=#000000 icon="\uf085" block="AS5048B"
 namespace AS5048B {
     // Constants for register addresses
     const REG_PROG = 0x03;          // Programming register
